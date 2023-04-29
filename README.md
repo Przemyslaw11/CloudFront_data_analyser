@@ -11,22 +11,25 @@ Overall, CloudFront_data_analyser is an easy-to-use, yet powerful tool that can 
 
 # Configuration:
 
-# ⚫STEP 1 
+### ⚫STEP 1 
   Clone repository:
   
     $ git clone https://github.com/Przemyslaw11/CloudFront_data_analyser.git
     
-# ⚪STEP 2:
+### ⚪STEP 2:
   Make venv and install necessary requirements:
   
     $ python3 -m venv myenv
     $ source myenv/bin/activate
     $ pip install -r requirements.txt
 
-# ⚫STEP 3
+### ⚫STEP 3
   Ensure that you are in CloudFront_data_analyser directory and run tests:
   
     $ python -m unittest discover tests
     
-# ⚪STEP 4:
+### ⚪STEP 4:
   Open 'app.ipynb' jupyter notebook and run all cells.
+
+# Docs
+  Documentation for the project is available under the following link: https://przemyslaw11.github.io/CloudFront_data_analyser.github.io/
