@@ -111,7 +111,35 @@ def generate_single_log() -> dict:
 
     return data_dict
 
-def generate_data(number_of_visits: int = random.randint(100,1000)) -> pd.DataFrame:
-    """Generates a pandas DataFrame containing simulated data for a given number of web server log entries."""
-    df = pd.DataFrame(generate_single_log() for i in range(number_of_visits))
+def simulate_repeated_visits(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Simulates repeated visits by randomly selecting a subset of the DataFrame and adding it to the original.
+
+    Args:
+    - dataframe (pd.DataFrame): The DataFrame containing the initial log entries.
+
+    Returns:
+    - A new DataFrame with the simulated repeated visits added.
+    """
+    num_visits = dataframe.shape[0]
+    random_subset = dataframe.sample(n=random.randint(num_visits // 10, num_visits // 2), replace=False, random_state=42)
+    dataframe = pd.concat([dataframe, random_subset], ignore_index=True)
+    return dataframe
+
+def generate_data(number_of_visits: int = random.randint(100, 1000)) -> pd.DataFrame:
+    """
+    Generates a pandas DataFrame containing simulated data for a given number of web server log entries.
+
+    Args:
+    - number_of_visits (int): The number of web server log entries to simulate.
+
+    Returns:
+    - A pandas DataFrame containing the simulated web server log entries.
+    """
+    # Generate initial log entries
+    temp_df = pd.DataFrame([generate_single_log() for i in range(number_of_visits)])
+
+    # Simulate repeated visits
+    df = simulate_repeated_visits(temp_df)
+
     return df
