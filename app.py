@@ -48,26 +48,20 @@ def find_unique_addresses(dataframe: pd.DataFrame) -> np.ndarray:
     unique_ips = dataframe['c_ip'].unique()
     return unique_ips
 
-def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> pd.core.series.Series:
+def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> pd.core.series.Series :
     """ 
     Returns the number of visits per IP address in the given DataFrame.
     If an IP address is specified, returns the number of visits for that IP only.
     """
     if ip_address:
-        unique_ips = find_unique_addresses(dataframe)
-        if ip_address in unique_ips:
-            return dataframe['c_ip'].value_counts()[ip_address]
-        else:
-            return 0
+        ip_count = dataframe['c_ip'].value_counts().get(ip_address, 0)
+        return ip_count
     else:
         ip_counts = dataframe['c_ip'].value_counts()
         return ip_counts
 
 
 # %%
-import pandas as pd
-import matplotlib.pyplot as plt
-
 def show_edge_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     """
     Displays a pie chart of the traffic distribution between the top N edge locations in the given DataFrame.
@@ -79,8 +73,7 @@ def show_edge_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     top_n : int, optional
         The number of top edge locations to display in the pie chart. Defaults to 10 and is limited to a maximum of 20.
     """
-    if top_n > 20:
-        top_n = 20
+    top_n = min(top_n, 20)
         
     if 'x_edge_location' not in dataframe.columns:
         raise ValueError("Input dataframe does not have 'x_edge_location' column.")
@@ -135,8 +128,7 @@ def plot_country_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     top_n : int, optional
         The number of top countries to display in the pie chart. Defaults to 10 and is limited to a maximum of 20.
     """
-    if top_n > 20:
-        top_n = 20
+    top_n = min(top_n, 20)
 
     if 'c_ip' not in dataframe.columns:
         raise ValueError("Input dataframe does not have 'c_ip' column.")
@@ -205,7 +197,7 @@ def check_brute_force(dataframe: pd.DataFrame, threshold: int = 100) -> list:
     """Checks for potential brute force attacks in a DataFrame of CloudFront logs.
     
     Parameters:
-    daframe (pd.DataFrame): A pandas DataFrame containing the data to be analyzed.
+    dataframe (pd.DataFrame): A pandas DataFrame containing the data to be analyzed.
     threshold (int): An integer representing the maximum number of requests allowed within a 5-minute sliding window. Defaults to 100.
     """
 
