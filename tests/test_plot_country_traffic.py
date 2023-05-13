@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 
 # Import the function to test
 from app import plot_country_traffic
+from app import pie_plot_head
 
 class TestPlotCountryTraffic(unittest.TestCase):
     

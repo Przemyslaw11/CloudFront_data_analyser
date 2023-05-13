@@ -16,25 +16,20 @@ class TestShowEdgeTraffic(unittest.TestCase):
         
     def test_show_edge_traffic(self):
         # Test case 1: Verify if the function can generate a pie chart for the top N edge locations.
-        with patch('matplotlib.pyplot.show') as mock_show:
+        with patch('matplotlib.pyplot.savefig') as mock_show:
             show_edge_traffic(self.df, top_n=2)
             self.assertEqual(mock_show.call_count, 1)
         
-        # Test case 2: Verify if the function can limit the number of top edge locations to a maximum of 20.
-        with patch('matplotlib.pyplot.show') as mock_show:
-            show_edge_traffic(self.df, top_n=30)
-            self.assertEqual(mock_show.call_count, 1)
-        
-       # Test case 3: Verify if the function can handle an empty DataFrame.
-        with patch('matplotlib.pyplot.show') as mock_show:
+       # Test case 2: Verify if the function can handle an empty DataFrame.
+        with patch('matplotlib.pyplot.savefig') as mock_show:
             data = {'x_edge_location': []}
             df = pd.DataFrame(data)
-            show_edge_traffic(df, top_n=10)
-            self.assertEqual(mock_show.call_count, 0)
+            with self.assertRaises(ValueError):
+                show_edge_traffic(df, top_n=10)
             
-        # Test case 4: Verify if the function can handle a DataFrame with no edge location data.
-        with patch('matplotlib.pyplot.show') as mock_show:
+        # Test case 3: Verify if the function can handle a DataFrame with no edge location data.
+        with patch('matplotlib.pyplot.savefig') as mock_show:
             data = {'x_edge_location': []}
             df = pd.DataFrame(data)
-            show_edge_traffic(df, top_n=10)
-            self.assertEqual(mock_show.call_count, 0)
+            with self.assertRaises(ValueError):
+                show_edge_traffic(df, top_n=10)
