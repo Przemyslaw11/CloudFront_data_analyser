@@ -1,11 +1,11 @@
-# %% [markdown]
-# # FUNCTIONS
-
 # %%
 from data_gen import generate_data
+from datetime import datetime
+from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import os
 
 # %%
 def extract_data(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -45,8 +45,7 @@ def find_unique_addresses(dataframe: pd.DataFrame) -> np.ndarray:
     Returns:
     np.ndarray: An array of unique IP addresses found in the 'c_ip' column of the DataFrame.
     """
-    unique_ips = dataframe['c_ip'].unique()
-    return unique_ips
+    return dataframe['c_ip'].unique()
 
 def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> pd.core.series.Series :
     """ 
@@ -62,6 +61,27 @@ def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> pd.c
 
 
 # %%
+def pie_plot_head(dataframe: pd.DataFrame, top_by: str,  top_n: int = 10):
+    if top_by not in dataframe:
+        raise ValueError(f"Column {top_by} not in dataframe")
+    top_n = min(len(dataframe[top_by]), top_n)
+    if top_n == 0:
+        raise ValueError(f"Column {top_by} is empty") 
+
+    pd_series = dataframe[top_by].value_counts()
+    title = f'Top {top_n} of {top_by} by count'
+
+    plt.figure(title)
+    plt.pie(pd_series.head(top_n), labels=pd_series.head(top_n).index, autopct='%1.1f%%')
+    plt.title(title, y=1.08)
+    plt.axis('equal')
+    
+    os.makedirs("figures", exist_ok=True)
+    now = datetime.now().strftime('%d-%m-%y %H-%M-%S')
+    img_path = str(Path("figures")/ f"{title} {now}.png")
+    plt.savefig(img_path)
+
+# %%
 def show_edge_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     """
     Displays a pie chart of the traffic distribution between the top N edge locations in the given DataFrame.
@@ -73,30 +93,12 @@ def show_edge_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     top_n : int, optional
         The number of top edge locations to display in the pie chart. Defaults to 10 and is limited to a maximum of 20.
     """
-    top_n = min(top_n, 20)
-        
-    if 'x_edge_location' not in dataframe.columns:
-        raise ValueError("Input dataframe does not have 'x_edge_location' column.")
-    edge_location_counts = dataframe['x_edge_location'].value_counts()
-    
-    # Check if there are any edge location data
-    if len(edge_location_counts) == 0:
-        print('No edge location data found')
-        return
-    
-    # Check if there are enough edge locations to display
-    if len(edge_location_counts) < top_n:
-        top_n = len(edge_location_counts)
-    
-    # Create a pie chart of the location counts
-    plt.pie(edge_location_counts.head(top_n), labels=edge_location_counts.head(top_n).index, autopct='%1.1f%%')
-    plt.title('Traffic between top {} edge locations'.format(top_n))
-    plt.axis('equal')
-    plt.show()
+    pie_plot_head(dataframe, 'x_edge_location', top_n)
 
 # %%
-import json
+from urllib.parse import urljoin
 import urllib.request
+import json
 
 def get_location(ip: str) -> str:
   """
@@ -108,14 +110,10 @@ def get_location(ip: str) -> str:
     Returns:
     str: The country associated with the IP address, or 'Unknown' if no country information is available.
   """
-  response = urllib.request.urlopen('http://ipwho.is/'+ip)
+  response = urllib.request.urlopen(urljoin('http://ipwho.is/', ip))
   ipwhois = json.load(response)
 
-  if 'country' in ipwhois:
-    return ipwhois['country']
-  else:
-    return 'Unknown'
-
+  return ipwhois.get('country', 'Unknown')
 
 def plot_country_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     """
@@ -128,33 +126,14 @@ def plot_country_traffic(dataframe: pd.DataFrame, top_n: int = 10):
     top_n : int, optional
         The number of top countries to display in the pie chart. Defaults to 10 and is limited to a maximum of 20.
     """
-    top_n = min(top_n, 20)
-
-    if 'c_ip' not in dataframe.columns:
-        raise ValueError("Input dataframe does not have 'c_ip' column.")
-    
-    # Find location for each c_ip in the DataFrame
+    if 'c_ip' not in dataframe:
+        raise ValueError(f"Column c_ip not in dataframe")
     dataframe['location'] = dataframe['c_ip'].apply(get_location)
-    location_counts = dataframe['location'].value_counts().head(top_n)
-    
-       # Check if there are any country data
-    if len(location_counts) == 0:
-        print('No country data found')
-        return
-    
-    # Check if there are enough countries to display
-    if len(location_counts) < top_n:
-        top_n = len(location_counts)
-        
 
-    # Create a pie chart of the location counts
-    plt.pie(location_counts.values, labels=location_counts.index, autopct='%1.1f%%')
-    plt.title('Traffic between top {} countries'.format(top_n))
-    plt.axis('equal')
-    plt.show()
+    pie_plot_head(dataframe, 'location', top_n)
 
 # %%
-def get_freq_endpoints(dataframe: pd.DataFrame, frequency=100) -> pd.DataFrame:
+def get_freq_endpoints(dataframe: pd.DataFrame, frequency = 100) -> pd.DataFrame:
     """
     Returns a DataFrame containing the endpoints that were visited more than a specified frequency,
     grouped by the HTTP status code, method, and endpoint.
@@ -174,31 +153,26 @@ def get_freq_endpoints(dataframe: pd.DataFrame, frequency=100) -> pd.DataFrame:
         grouped by the HTTP status code, method, and endpoint.
         The DataFrame has the following columns: 'sc_status', 'cs_method', 'cs_uri_stem', and 'count'.
     """
-    # handle empty input dataframe
     if dataframe.empty:
-        return pd.DataFrame(columns=['sc_status', 'cs_method', 'cs_uri_stem', 'count'])
-
-    # handle input dataframe that doesn't have the expected columns
-    expected_columns = ['sc_status', 'cs_method', 'cs_uri_stem']
-    if not all(col in dataframe.columns for col in expected_columns):
-        raise ValueError(f"Input dataframe does not have the expected columns: {', '.join(expected_columns)}")
+        return pd.DataFrame()
 
     # group the data by sc_status, cs_method, and endpoint, and count the occurrences
     count_df = dataframe.groupby(['sc_status', 'cs_method', 'cs_uri_stem']).size().reset_index(name='count')
 
-    # filter the dataframe to only include rows with count >= freq
-    result_df = count_df[count_df['count'] >= frequency]
+    # filter the dataframe to only include rows with count > freq
+    result_df = count_df[count_df['count'] > frequency]
 
     # return the resulting dataframe
     return result_df
 
 # %%
-def check_brute_force(dataframe: pd.DataFrame, threshold: int = 100) -> list:
+def check_brute_force(dataframe: pd.DataFrame, sigma: float = 3.5) -> list:
     """Checks for potential brute force attacks in a DataFrame of CloudFront logs.
     
     Parameters:
-    dataframe (pd.DataFrame): A pandas DataFrame containing the data to be analyzed.
-    threshold (int): An integer representing the maximum number of requests allowed within a 5-minute sliding window. Defaults to 100.
+    daframe (pd.DataFrame): A pandas DataFrame containing the data to be analyzed.
+    sigma (float): Says how many standard deviations of difference there must be to mark an IP 
+    as source of brute force attack, ex. in case of sigma = 3.5 in theory only 1 bussiest per 5000 different IPs will be marked.
     """
 
     # Group the dataframe by endpoints and datetime
@@ -213,6 +187,10 @@ def check_brute_force(dataframe: pd.DataFrame, threshold: int = 100) -> list:
     # Calculate the maximum count of requests for each window
     max_counts = [window.groupby('cs_uri_stem')['datetime'].count().max() for window in windows]
 
+    req_count_stdev = np.sqrt(np.var(max_counts))
+    req_count_avg = np.average(max_counts)
+    threshold = req_count_avg + req_count_stdev * sigma
+
     # Flag any window with a maximum count exceeding threshold requests
     potential_attacks = [(window.iloc[0]['datetime'], window.iloc[-1]['datetime'])
                          for window, max_count in zip(windows, max_counts) if max_count > threshold]
@@ -220,26 +198,25 @@ def check_brute_force(dataframe: pd.DataFrame, threshold: int = 100) -> list:
     return potential_attacks
 
 # %%
-# 1. Load the data 
-full_df = generate_data()
+# 1.
+full_df = generate_data(50)
 df = extract_data(full_df)
 
-# 2. Find unique IP addresses
-find_unique_addresses(df)
+# 2.
+unique_ips = find_unique_addresses(df)
 
-# 3. Find how many times a specific IP address visited the website
+# 3.
 count_visits_per_ip(df)
 
-# 4.Show the distribution of traffic between edge locations
+# 4.
 show_edge_traffic(df)
 
-# 5.Show the distribution of traffic dependent on countries.
+# 5.
 plot_country_traffic(df)
 
-# 6. Find endpoints which were visited more than 100 times (default), depending on the HTTP code and method
-get_freq_endpoints(df)
+# 6.
+get_freq_endpoints(df, 20)
 
-# 7.Check if there is a possible brute force attack
+# 7.
 check_brute_force(df)
-
 
