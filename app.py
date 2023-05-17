@@ -35,6 +35,8 @@ def extract_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # %%
+from typing import Union
+
 def find_unique_addresses(dataframe: pd.DataFrame) -> np.ndarray:
     """
     Returns an array of unique IP addresses from the given DataFrame.
@@ -47,17 +49,15 @@ def find_unique_addresses(dataframe: pd.DataFrame) -> np.ndarray:
     """
     return dataframe['c_ip'].unique()
 
-def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> pd.core.series.Series :
+def count_visits_per_ip(dataframe: pd.DataFrame, ip_address: str = None) -> Union[pd.core.series.Series, np.int64]:
     """ 
     Returns the number of visits per IP address in the given DataFrame.
     If an IP address is specified, returns the number of visits for that IP only.
     """
     if ip_address:
-        ip_count = dataframe['c_ip'].value_counts().get(ip_address, 0)
-        return ip_count
+        return dataframe['c_ip'].value_counts().get(ip_address, 0)
     else:
-        ip_counts = dataframe['c_ip'].value_counts()
-        return ip_counts
+        return dataframe['c_ip'].value_counts()
 
 
 # %%
@@ -155,7 +155,7 @@ def get_freq_endpoints(dataframe: pd.DataFrame, frequency = 100) -> pd.DataFrame
     """
     if dataframe.empty:
         return pd.DataFrame()
-
+    
     # group the data by sc_status, cs_method, and endpoint, and count the occurrences
     count_df = dataframe.groupby(['sc_status', 'cs_method', 'cs_uri_stem']).size().reset_index(name='count')
 
@@ -198,7 +198,7 @@ def check_brute_force(dataframe: pd.DataFrame, sigma: float = 3.5) -> list:
     return potential_attacks
 
 # %%
-# 1.
+ # 1.
 full_df = generate_data(50)
 df = extract_data(full_df)
 
@@ -219,4 +219,5 @@ get_freq_endpoints(df, 20)
 
 # 7.
 check_brute_force(df)
+
 
