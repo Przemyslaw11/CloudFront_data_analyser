@@ -1,6 +1,6 @@
 # CloudFront_data_analyser 
 Tool that allows you to analyze your CloudFront logs.
-https://przemyslaw11.github.io/CloudFront_data_analyser.github.io/
+
 CloudFront_data_analyser is a project that offers a simple yet powerful solution for analyzing access logs to web applications stored in Amazon CloudFront. The tool allows you to easily load your log file or generate synthetic data, and gain insights into your website traffic.
 
 With CloudFront_data_analyser, you can analyze unique IP addresses visiting your website, the number of visits from a single IP address, distribution of traffic between different "edge locations", traffic distribution depending on the country, and more. The tool also features an endpoint frequency threshold analysis, which can help you identify potential security breaches based on the HTTP response code and request method.
